@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LED grid animation</title>
+<style>
+.illustration { top: 0px; left: 0px; padding: 20px; }
+canvas { padding: 0px; border: solid 0px black; }
+img { width: 140px; }
+</style>
+<script>
+var gridWidth = 16;
+var gridHeight = 16;
+var canvasWidth = 160;
+var canvasHeight = 160;
+var canvas;
+var canvas1;
+var ANIM_NEXT = 1;
+var ANIM_PREV = -1;
+var ANIM_CURR = 0;
+var curPattern = 0;
+var boxWidth = 10;
+var boxHeight = 10;
+var ctrlKeyOn = false;
+
+window.addEventListener('load', doLoad, false);
+window.addEventListener('keydown', eventKeyDown, false);
+
+function eventKeyDown(key, which) {
+  if (key.keyCode == 39) // right arrow
+    drawFrame(ANIM_NEXT);
+  if (key.keyCode == 37) // left arrow
+    drawFrame(ANIM_PREV);
+}
+function doLoad() {
+  allframes = document.getElementById("allframes");
+  allframes.innerHTML += '<canvas id="canvas" width="'+canvasWidth+'" height="'+canvasHeight+'"></canvas>\n';
+  for (var pat = 0; pat < patterns.length; pat++) {
+    allframes.innerHTML += '<canvas id="canvas'+pat+'" width="'+canvasWidth+'" height="'+canvasHeight+'"></canvas>\n';
+  }
+  canvas = document.getElementById("canvas");
+  canvas.addEventListener('mousedown', mouseDown, false);
+  canvas.addEventListener('mousemove', doWrite, false);
+  canvas.addEventListener('mouseup', mouseUp, false);
+  drawFrame(ANIM_CURR);
+  for (var pat = 0; pat < patterns.length; pat++) {
+    var c = document.getElementById("canvas"+pat);
+    drawFrameContext(c.getContext("2d"), ANIM_NEXT);
+    c.addEventListener('mousedown', mouseDown, false);
+    c.addEventListener('mousemove', doWrite, false);
+    c.addEventListener('mouseup', mouseUp, false);
+  }
+  animate();
+}
+var writeOn = false;
+function mouseDown(event) {
+  writeOn = true;
+  doWrite(event)
+}
+function doWrite(event) {
+  if (writeOn) {
+    var context = event.target.getContext("2d");
+    var x = Math.floor(event.offsetX/boxWidth);
+    var y = Math.floor(event.offsetY/boxHeight);
+    context.fillStyle = 'lightgreen';
+    writeLED(context, x, y, !event.ctrlKey);
+  }
+}
+function mouseUp() {
+  writeOn = false;
+}
+
+function animate() {
+  drawFrame(1);
+  if (curPattern > 0)
+    setTimeout("animate()", 400);
+}
+
+function drawFrame(direction){
+  var context = canvas.getContext("2d");
+  drawFrameContext(context, direction);
+}
+function drawFrameContext(context, direction) {
+  //context.clearRect(0, 0, canvasWidth, canvasHeight);
+  context.fillStyle = 'black';
+  context.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  if (direction < 0) {
+    curPattern--;
+    if (curPattern < 0) curPattern = patterns.length - 1;
+  }
+  if (direction > 0) {
+    curPattern++;
+    if (curPattern >= patterns.length) curPattern = 0;
+  }
+  draw(context);
+}
+function draw(context) {
+  context.fillStyle = 'lightgreen';
+  for (var i = 0; i < gridHeight; i++) {
+    for (var j = 0; j < gridWidth; j++){
+      if (patterns[curPattern][i][j]==1) {
+	//context.fillRect(j*boxWidth, i*boxHeight, boxWidth, boxHeight);
+        writeLED(context, j, i, true)
+      }
+    }
+  }
+}
+function writeLED(context, x, y, on) {
+  context.beginPath();
+  var posX = (x+0.5)*boxWidth;
+  var posY = (y+0.5)*boxHeight;
+  context.arc(posX, posY, boxWidth/3, 0, Math.PI*2, true);
+  context.lineWidth = 5;
+  if (on)
+    context.strokeStyle = 'lightgreen';
+  else
+    context.strokeStyle = 'black';
+  context.stroke();
+  if (on)
+    context.fillStyle = 'rgb(242,250,247)';
+  else
+    context.fillStyle = 'black';
+  context.arc(posX, posY, boxWidth/3, 0, Math.PI*2, true);
+  context.fill();
+}
+
+var patterns = [
+  [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0]
+  ],
+  [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0]
+  ],
+  [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,1,0,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0],
+    [0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0]
+  ],
+  [
+    [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,1],
+    [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    [1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0],
+    [1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0],
+    [1,0,0,0,0,1,1,0,1,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,1,0,1,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1,1],
+    [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    [1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0],
+    [1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0],
+    [1,0,0,0,0,1,1,0,1,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,1,0,1,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  ],
+  [
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0],
+    [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0],
+    [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0]
+  ],
+  [
+    [0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,1,0,1,0,0,0,0,1,1,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,1,0,1,0,0,0,0,1,1,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0]
+  ],
+  [
+    [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,1,0,1,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0],
+    [1,1,1,0,0,1,1,1,1,1,1,0,0,1,1,1],
+    [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,1,0,1,0,0,0,0,1,1,0],
+    [1,0,0,0,0,1,0,0,1,0,0,0,0,1,0,0],
+    [1,1,1,0,0,1,1,1,1,1,1,0,0,1,1,1]
+  ]
+];
+</script>
+</head>
+<body>
+<div class="illustration" id="allframes">
+</div>
+<button onclick="drawFrame(ANIM_PREV)"><-</button>
+<button onclick="animate()">animate once</button>
+<button onclick="drawFrame(ANIM_NEXT)">-></button>
+<div class="illustration">
+<img src="Walkingman_slow.gif">
+<img src="0000.jpg">
+<img src="0001.jpg">
+<img src="0002.jpg">
+<img src="0003.jpg">
+<img src="0004.jpg">
+<img src="0005.jpg">
+<img src="0006.jpg">
+<img src="0007.jpg">
+<img src="0008.jpg">
+<img src="0009.jpg">
+<img src="0010.jpg">
+<img src="0011.jpg">
+<img src="0012.jpg">
+<img src="0013.jpg">
+<img src="0014.jpg">
+<img src="0015.jpg">
+<img src="0016.jpg">
+</div>
+<div>
+<a href="http://en.wikipedia.org/wiki/Xiaoluren">http://en.wikipedia.org/wiki/Xiaoluren</a><br>
+<a href="https://github.com/monur/LEDMatrixSimulator">https://github.com/monur/LEDMatrixSimulator</a><br>
+<a href="http://www.mem.com.tw/article_content.asp?sn=0709110012">http://www.mem.com.tw/article_content.asp?sn=0709110012</a><br>
+apparently there is not one standard Xiaoluren animation, it depends on the city
+</div>
+</body>
+</html>
